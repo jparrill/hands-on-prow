@@ -19,7 +19,7 @@ https://github.com/jparrill/hands-on-prow
 
 .image img/jparrill_avatar.jpg _ 300
 
-.caption Hands on Prow by [[https://github.com/jparrill/hands-on-prow][Juan Manuel Parrilla]]
+.caption [[https://github.com/jparrill/hands-on-prow][Hands on Prow]] by Juan Manuel Parrilla
 
 * Agenda
 
@@ -32,5 +32,46 @@ https://github.com/jparrill/hands-on-prow
 - Notification management
 
 .background img/background.png
-.caption Hands on Prow by [[https://github.com/jparrill/hands-on-prow][Juan Manuel Parrilla]]
+.caption [[https://github.com/jparrill/hands-on-prow][Hands on Prow]] by Juan Manuel Parrilla
 
+* What is Prow
+
+.image img/prow_icon.jpg
+
+- [[https://github.com/kubernetes/test-infra/tree/master/prow][CI/CD System]] hosted by a Kubernetes/Openshift platform
+- Management of Github repo via comments `/lgtm` or `/retest`
+- Made in [[https://godoc.org/k8s.io/test-infra/prow][Golang]]
+- Jobs manifests writed in *YAML*
+- Similar behaviour than _Operators_
+- This is the [[https://raw.githubusercontent.com/kubernetes/test-infra/master/prow/docs/pr-interactions-sequence.svg?sanitize=true][workflow diagram]]
+
+.background img/background.png
+.caption [[https://github.com/jparrill/hands-on-prow][Hands on Prow]] by Juan Manuel Parrilla
+
+
+* What is Prow
+
+- Stores the configuration on ConfigMaps and Secrets 
+- By default uses the `test-pod` namespace to trigger the pod jobs and the `default` namespace for Prow Control Plane
+- An this is how looks like:
+.code samples/control_plane
+
+.background img/background.png
+.caption [[https://github.com/jparrill/hands-on-prow][Hands on Prow]] by Juan Manuel Parrilla
+
+
+* What is Prow
+
+- Based on Deployments and Services
+.code samples/control_plane_services
+- Where *Deck* is the UI component
+- *Hook* is the key element for webhooks and redirections (to/from GitHub and to/from plugins)
+	Github /retest comment > Hook > Tide > Trigger jobs 
+- *Tide* will take care about testing and merging (once configured) 
+
+.background img/background.png
+.caption [[https://github.com/jparrill/hands-on-prow][Hands on Prow]] by Juan Manuel Parrilla
+
+* Prow Core Components
+
+.image img/core_components.png _ 500

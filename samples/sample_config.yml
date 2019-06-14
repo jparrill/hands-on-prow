@@ -1,0 +1,103 @@
+prowjob_namespace: default
+pod_namespace: test-pods
+log_level: debug
+
+tide:
+  merge_method:
+    the-shadowmen/kubevirt.github.io: squash
+  queries:
+    - repos:
+        - the-shadowmen/kubevirt.github.io
+      labels:
+        - lgtm
+        - approved
+      missingLabels:
+        - do-not-merge
+        - do-not-merge/hold
+        - do-not-merge/work-in-progress
+        - do-not-merge/invalid-owners-file
+        - needs-ok-to-test
+  pr_status_base_url: http://kubevirt-prow-0.gce.sexylinux.net:30000/pr
+  context_options:
+    # Use branch protection options to define required and optional contexts
+    from-branch-protection: false
+    # Treat unknown contexts as optional
+    skip-unknown-contexts: true
+
+sinker:
+  resync_period: 1m
+  max_prowjob_age: 48h
+  max_pod_age: 30m
+
+plank:
+  job_url_template: 'http://kubevirt-prow-0.gce.sexylinux.net:30000/view/gcs/comm-prow-storage/{{if eq .Spec.Type "presubmit"}}pr-logs/pull{{else if eq .Spec.Type "batch"}}pr-logs/pull{{else}}logs{{end}}{{if .Spec.Refs}}{{if ne .Spec.Refs.Org ""}}/{{.Spec.Refs.Org}}_{{.Spec.Refs.Repo}}{{end}}{{end}}{{if eq .Spec.Type "presubmit"}}/{{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}{{else if eq .Spec.Type "batch"}}/batch{{end}}/{{.Spec.Job}}/{{.Status.BuildID}}/'
+  job_url_prefix: "http://kubevirt-prow-0.gce.sexylinux.net:30000/view/gcs/"
+  pod_pending_timeout: 60m
+  allow_cancellations: true
+  default_decoration_config:
+    timeout: 2h
+    grace_period: 15s
+    utility_images:
+      clonerefs: "gcr.io/k8s-prow/clonerefs:v20190523-832050b39"
+      initupload: "gcr.io/k8s-prow/initupload:v20190523-832050b39"
+      entrypoint: "gcr.io/k8s-prow/entrypoint:v20190523-832050b39"
+      sidecar: "gcr.io/k8s-prow/sidecar:v20190523-832050b39"
+    gcs_configuration:
+      bucket: "comm-prow-storage"
+      path_strategy: "explicit"
+    gcs_credentials_secret: "gcs"
+
+deck:
+  spyglass:
+    size_limit: 500000000 # 500MB
+    viewers:
+      "started.json|finished.json": ["metadata-viewer"]
+      "build-log.txt": ["build-log-viewer"]
+      "artifacts/junit.*\\.xml": ["junit-viewer"]
+
+periodics:
+  - interval: 24h
+    name: kubevirt-io-periodic-link-checker
+    decorate: true
+    spec:
+      nodeSelector:
++       region: primary
+      containers:
+        - image: docker.io/library/ruby
+          env:
+            - name: NOKOGIRI_USE_SYSTEM_LIBRARIES
+              value: "true"
+          command: ["/bin/sh", "-c"]
+          args: ["git clone https://github.com/the-shadowmen/kubevirt.github.io.git && cd kubevirt.github.io && /usr/local/bin/bundle install && bundle exec rake"]
+
+postsubmits:
+  the-shadowmen/kubevirt.github.io:
+    - name: kubevirt-io-postsubmit-link-checker
+      decorate: true
+      spec:
+        nodeSelector:
++         region: primary
+        containers:
+          - image: docker.io/library/ruby
+            env:
+              - name: NOKOGIRI_USE_SYSTEM_LIBRARIES
+                value: "true"
+            command: ["/bin/sh", "-c"]
+            args: ["/usr/local/bin/bundle install && bundle exec rake"]
+
+presubmits:
+  the-shadowmen/kubevirt.github.io:
+    - name: kubevirt-io-presubmit-link-checker
+      decorate: true
+      always_run: true
+      skip_report: false
+      spec:
+        nodeSelector:
++         region: primary
+        containers:
+          - image: docker.io/library/ruby
+            env:
+              - name: NOKOGIRI_USE_SYSTEM_LIBRARIES
+                value: "true"
+            command: ["/bin/sh", "-c"]
+            args: ["/usr/local/bin/bundle install && bundle exec rake"]
