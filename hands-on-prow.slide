@@ -24,7 +24,7 @@ https://github.com/jparrill/hands-on-prow
 * Agenda
 
 - What is Prow
-- Core Components
+- Prow Control Plane
 - Deploy & Configure your Prow platform
 - Prow Plugins
 - Auto-management of your GitHub repo
@@ -46,7 +46,6 @@ https://github.com/jparrill/hands-on-prow
 - This is the [[https://raw.githubusercontent.com/kubernetes/test-infra/master/prow/docs/pr-interactions-sequence.svg?sanitize=true][workflow diagram]]
 
 .background img/background.png
-.caption [[https://github.com/jparrill/hands-on-prow][Hands on Prow]] by Juan Manuel Parrilla
 
 
 * What is Prow
@@ -57,7 +56,6 @@ https://github.com/jparrill/hands-on-prow
 .code samples/control_plane
 
 .background img/background.png
-.caption [[https://github.com/jparrill/hands-on-prow][Hands on Prow]] by Juan Manuel Parrilla
 
 
 * What is Prow
@@ -70,8 +68,119 @@ https://github.com/jparrill/hands-on-prow
 - *Tide* will take care about testing and merging (once configured) 
 
 .background img/background.png
-.caption [[https://github.com/jparrill/hands-on-prow][Hands on Prow]] by Juan Manuel Parrilla
 
-* Prow Core Components
+* Prow Control Plane
 
 .image img/core_components.png _ 500
+.background img/background.png
+
+
+* Prow Control Plane: Hook 
+
+.image img/hook.png _ 180
+
+- *Hook* is the most important piece. 
+- It is a stateless server that listens for GitHub webhooks and dispatches them to the appropriate plugins. 
+- Hook's plugins are used to trigger jobs, implement 'slash' commands, post to Slack, and more...
+
+.background img/background.png
+
+
+* Prow Control Plane: Plank  
+
+- [[https://github.com/kubernetes/test-infra/tree/master/prow/plank][*Plank*]] is the controller that manages the job execution and lifecycle for jobs that run in k8s pods.
+- Decores some of the pod behaviour like Timeout, GracePeriod, etc...
+- Also manages some components like *Utility_Images*
+- Take care about spin up a pod that uploads the artifacts to GCS
+.image img/plank.png _ 400
+
+.background img/background.png
+
+
+* Prow Control Plane: Plank  
+- This is how looks like the Plank's config section:
+.code -edit samples/sample_config.yaml /^plank:/,/gcs_credentials_secret/ 
+
+.background img/background.png
+
+
+* Prow Control Plane: Deck 
+
+- [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/deck][*Deck*]] is the Prow's WebUI and presents a nice view of recent jobs, among other things
+.image img/deck_recent.png _ 750
+.background img/background.png
+
+
+* Prow Control Plane: Deck 
+- The PR current status
+.image img/deck_tide.png _ 900
+.background img/background.png
+
+
+* Prow Control Plane: Deck 
+- ...and history of merge automation
+.image img/deck_tide_history.png _ 900
+.background img/background.png
+
+
+* Prow Control Plane: Deck 
+.image img/deck_tide_pr_status_by_auth.png 480 730
+- Also a dashboard for PR authors.
+.background img/background.png
+
+
+* Prow Control Plane: Deck 
+
+- This is how looks like the Deck's config section:
+.code -edit samples/sample_config.yaml /^deck:/,/junit/ 
+
+.background img/background.png
+
+
+* Prow Control Plane: Horologium and Synker
+ 
+Both are very simple but useful components
+
+- [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/horologium][*Horologium*]] triggers periodic jobs when necessary.
+- [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/sinker][*Sinker*]] cleans up old jobs and pods. (works as a GC)
+- Horologium does not have config at all but here is a Sinker piece of config:
+.code samples/sample_config.yaml /^sinker:/,/max_pod_age:/
+
+.background img/background.png
+
+
+* Prow Control Plane: Tide
+- [[https://github.com/kubernetes/test-infra/blob/master/prow/cmd/tide/README.md][*Tide*]] manages retesting and merging PRs once they meet the configured merge criteria.
+- Ensure to sync the ConfigMap config with the running config and update it if applies
+- Works with a pool of GitHub PRs that match a given set of criteria
+- It will automatically retest PRs that meet the criteria and automatically merge them when they have up-to-date passing test results
+- Serves live data to populate Tide Dashboard, PR Dashboard and also Tide History page
+- Provides these merge modes: `merge`, `squash` and `rebase`
+
+.background img/background.png
+
+
+* Prow Control Plane: Tide
+.code samples/sample_config.yaml /^tide:/,/skip-unknown/
+.background img/background.png
+
+
+* Prow Control Plane: Crier
+- [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/crier][*Crier*]] manages the notifications against different providers like slack, github, etc..
+- Reports your prowjobs on their status changes.
+- Communication with providers through API tokens inside of k8s secrets
+
+Those are the supported providers:
+
+- Gerrit
+- Pubsub
+- Github
+- Slack
+
+.background img/background.png
+
+
+* Prow Control Plane: Crier
+- This is how looks like the Crier's config:
+.code samples/sample_config.yaml /^slack_reporter:/,/report_template:/
+.background img/background.png

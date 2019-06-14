@@ -55,6 +55,25 @@ deck:
       "build-log.txt": ["build-log-viewer"]
       "artifacts/junit.*\\.xml": ["junit-viewer"]
 
+slack_reporter:
+  # Default: None
+  job_types_to_report:
+  - presubmit
+  - postsubmit
+  - periodic
+  - batch
+  # Default: None
+  job_states_to_report:
+  - triggered
+  - pending
+  - success
+  - failure
+  - aborted
+  - error
+  channel: team-kni-community
+  # The template shown below is the default
+  report_template: 'Job {{.Spec.Job}} of type {{.Spec.Type}} ended with state {{.Status.State}}. <{{.Status.URL}}|View logs>'
+
 periodics:
   - interval: 24h
     name: kubevirt-io-periodic-link-checker
