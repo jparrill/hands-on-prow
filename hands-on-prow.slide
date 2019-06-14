@@ -1,0 +1,36 @@
+Hands on: Prow
+Kubernetes Native CI/CD
+14 Jun 2019
+Tags: CI/CD, K8s, Prow
+
+Juan Manuel Parrilla
+Senior Software Engineer, Red Hat
+jparrill@redhat.com
+https://github.com/jparrill/hands-on-prow
+@kerbeross
+
+* About me
+
+.background img/background.png
+
+- Programming enthusiast
+- Redhatter
+- Openshift/Kubernetes Lover
+
+.image img/jparrill_avatar.jpg _ 300
+
+.caption Hands on Prow by [[https://github.com/jparrill/hands-on-prow][Juan Manuel Parrilla]]
+
+* Agenda
+
+- What is Prow
+- Core Components
+- Deploy & Configure your Prow platform
+- Prow Plugins
+- Auto-management of your GitHub repo
+- Testing with Prow
+- Notification management
+
+.background img/background.png
+.caption Hands on Prow by [[https://github.com/jparrill/hands-on-prow][Juan Manuel Parrilla]]
+
