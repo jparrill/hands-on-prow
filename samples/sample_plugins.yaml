@@ -1,0 +1,28 @@
+---
+plugins:
+  the-shadowmen:        # Organization
+  - size                # Manages the 'size/*' labels per PR
+  - label               # Base plugin for labeling
+  - hold                # Allows to add or remove the 'do-not-merge/hold'
+  - assign              # Assigns or requests reviews from users.
+  - blunderbuss         # Auto-Assign new PRs created to the reviewers.
+  - lifecycle           # Close, reopen, flag and/or unflag an issue or PR as frozen/stale/rotten
+  - verify-owners       # Validates OWNERS files if they are modified in a PR.
+  - wip                 # Applies the 'do-not-merge/wip' Label to pull requests.
+  - trigger             # Starts tests in reaction to commands and pull request events.
+
+  the-shadowmen/nostromo:
+  - approve       
+  - lgtm          
+  - owners-label 
+
+  the-shadowmen/kubevirt.github.io:
+  - approve       # Implements a pull request approval process that manages the 'approved' label 
+  - lgtm          # Manages the application and removal of the 'lgtm'
+  - owners-label  # Automatically adds labels to PRs based on the files they touch
+
+lgtm:
+- repos:
+  - the-shadowmen/nostromo
+  - the-shadowmen/kubevirt.github.io
+  review_acts_as_lgtm: true

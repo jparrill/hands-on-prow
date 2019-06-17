@@ -184,3 +184,151 @@ Those are the supported providers:
 - This is how looks like the Crier's config:
 .code samples/sample_config.yaml /^slack_reporter:/,/report_template:/
 .background img/background.png
+
+
+* Questions? 
+.background img/background.png
+
+
+* Deploying Prow 
+.image img/deploying_prow.jpg _ 800
+.background img/background.png
+
+
+* Deploying Prow 
+- We will start viewing this file [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md][Getting Started with Prow]]
+
+The problem with this guide is, that assumes that you're used to work with GCE/GKE and have some things configured.
+
+We will just start assuming that you already have a standalone k8s working, the basic one. You could follow this guide to do it:
+
+- [[https://kubernetes.io/docs/setup/production-environment/turnkey/gce/][Deploy K8s on GCE]]
+.image img/k8s_logo.png
+.background img/background.png
+
+
+* Deploying Prow 
+
+With our new fresh K8s cluster we will start working to deploy Prow:
+
+- [[https://github.com/jparrill/community/blob/feature/ci_cd_doc/docs/CI-CD/how-to-prow.md#deploying-on][Deploying Prow]] (you could avoid the terraform part)
+
+We will summarize all the nesessary steps to make it work (all explained in depth on the previous link):
+
+- Get into your k8s instance and Install Golang, Bazel, Tackel and some dev requirements
+- Create the proper RBAC and secrets that Prow needs
+- Clone [[https://github.com/kubernetes/test-infra.git][test-infra]] repository, create `test-pods` NS and apply the `prow/cluster/starter.yaml` manifest
+- Now you to have Prow working
+
+.background img/background.png
+
+
+* Deploying Prow 
+
+Depending on How did you configure your K8s instances you will access to your Prow instances in a way or other:
+
+- If you are working *without* GKE and you have _all-in-one_ k8s instance, you could access via NodePorts (we will go this way)
+.code samples/control_plane_services
+- Otherwise you could access via Ingress through the LoadBalancer that GKE provides you.
+- Our main point to work with the UI will be the `deck` service
+
+.background img/background.png
+
+
+* Configuring Prow 
+
+- Now we need to add the webhook to GitHub. Organization or Repository depending on the admin level that you want to give your bot.
+- You will need a GitHub account to use it as a bot. Our stagging one [[https://github.com/janitor-bot][Janitor]].
+
+You will need to spend some time preparing your config files, here you have our ones that maybe could be useful.
+
+- Prepare the [[https://github.com/the-shadowmen/nostromo/blob/master/config.yaml][Config file]] for Prow
+- Prepare the [[https://github.com/the-shadowmen/nostromo/blob/master/plugins.yaml][Plugins file]] for Prow
+- Prepare the [[https://github.com/the-shadowmen/nostromo/blob/master/labels.yaml][Labels file]] for Prow
+.background img/background.png
+
+
+* Configuring Prow 
+
+Now we need to verify that the ConfigFile and PluginFile is well formed with a *Bazel* task and then load it as ConfigMap on the `default` namespace.
+
+- Go to the `test-infra` repo location and execute this command:
+  bazel run //prow/cmd/checkconfig -- --plugin-config=$HOME/prow_conf/plugins.yaml --config-path=$HOME/prow_conf/config.yaml
+
+- Then load them into K8s `default` namespace (full path needed):
+  kubectl create configmap plugins \
+    --from-file=$HOME/prow_conf/plugins.yaml --dry-run -o yaml \
+    | kubectl replace configmap plugins -f -
+
+  kubectl create configmap config \
+    --from-file=config.yaml=config.yaml --dry-run -o yaml \
+    | kubectl create configmap config -f -
+
+  kubectl create configmap label-config \
+    --from-file=$HOME/prow_conf/labels.yaml -o yaml
+
+.background img/background.png
+
+
+* Configuring Prow 
+
+Ok, now we have all set to start working with a basic Prow platform, this allows you to manage and automate your Github repository with auto-labelling, approve merges (without auto-merging), etc...
+
+The capabilities of this depend on what [[https://prow.k8s.io/plugins][plugins]] did you activate on the PluginsConfig file
+there are plenty of them, but some of them needs to add additional ConfigMaps/Sections in ConfigFile/etc...
+
+Let's take a look to plugins...
+.image img/plugins_logo.png _ 200
+.background img/background.png
+
+
+* Questions? 
+.background img/background.png
+
+
+* Prow Plugins
+.image img/prow_plugins.png _ 800
+.background img/background.png
+
+
+* Prow Plugins
+Well, Prow plugins a a bunch of resources that give you capabilities on Prow platform. As an example, *assign* plugin gives the functionality to assign a reviewer to a PR that is already on going.
+.image img/assign_plugin.png _ 400
+.background img/background.png
+
+
+* Prow Plugins
+This is how looks like part of [[https://github.com/the-shadowmen/nostromo/blob/master/plugins.yaml][*PluginsConfig*]] file, this one shows the enabled plugins for our organization:
+.code samples/sample_plugins.yaml /^plugins/,/trigger/
+
+As you see those plugins are enabled for all the organization and you doesn't need to add them for every repo you have. Instead some other plugins need to be enabled by repository to make them work
+.background img/background.png
+
+
+* Prow Plugins
+Inside of `plugins:` section we should add every repo and plugins that want to be managed by Prow: 
+.code samples/sample_plugins.yaml /the-shadowmen\/kubevirt.github.io/,/owners-label/
+- And depending on the plugin, customize the config with their own configuration appart form `plugins:` section
+.code samples/sample_plugins.yaml /^lgtm/,/review_act/
+.background img/background.png
+
+
+* Prow Plugins
+Some plugins needs additional Config sections on Prow ConfigFile or maybe needs Additional services to be working properly, like _lgtm_, _approve_, or _trigger_. All of them has a thing in common, are managed by the same service *Tide*, which needs to be properly configured.
+
+As we said before:
+
+- [[https://github.com/kubernetes/test-infra/blob/master/prow/cmd/tide/README.md][*Tide*]] manages retesting and merging PRs once they meet the configured merge criteria.
+
+Also interacts with *Plank* in order to trigger Jobs
+.background img/background.png
+
+
+* Questions? 
+.background img/background.png
+
+
+* Auto-management of your GitHub repo
+.image img/bot_bender.png _ 350
+.background img/background.png
+
