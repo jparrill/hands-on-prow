@@ -1,6 +1,6 @@
-prowjob_namespace: default
-pod_namespace: test-pods
-log_level: debug
+prowjob_namespace: default      # Namespace for ControlPlane elements of Prow
+pod_namespace: test-pods        # Namespace to spin up jobs
+log_level: debug                # Log level
 
 tide:
   merge_method:
@@ -20,14 +20,14 @@ tide:
   pr_status_base_url: http://kubevirt-prow-0.gce.sexylinux.net:30000/pr
   context_options:
     # Use branch protection options to define required and optional contexts
-    from-branch-protection: false
+    from-branch-protection: false  # Customizable behaviour with protected branches
     # Treat unknown contexts as optional
-    skip-unknown-contexts: true
+    skip-unknown-contexts: true    # Extra context to modify the behaviour of Prow Jobs
 
 sinker:
-  resync_period: 1m
-  max_prowjob_age: 48h
-  max_pod_age: 30m
+  resync_period: 1m      # Sync period between Prow recheck the config from ConfigMap
+  max_prowjob_age: 48h   # How much time will stay the Job up until clean it up
+  max_pod_age: 30m       # Garbage collection for test-pods
 
 plank:
   job_url_template: 'http://kubevirt-prow-0.gce.sexylinux.net:30000/view/gcs/comm-prow-storage/{{if eq .Spec.Type "presubmit"}}pr-logs/pull{{else if eq .Spec.Type "batch"}}pr-logs/pull{{else}}logs{{end}}{{if .Spec.Refs}}{{if ne .Spec.Refs.Org ""}}/{{.Spec.Refs.Org}}_{{.Spec.Refs.Repo}}{{end}}{{end}}{{if eq .Spec.Type "presubmit"}}/{{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}{{else if eq .Spec.Type "batch"}}/batch{{end}}/{{.Spec.Job}}/{{.Status.BuildID}}/'
@@ -38,10 +38,10 @@ plank:
     timeout: 2h
     grace_period: 15s
     utility_images:
-      clonerefs: "gcr.io/k8s-prow/clonerefs:v20190523-832050b39"
-      initupload: "gcr.io/k8s-prow/initupload:v20190523-832050b39"
-      entrypoint: "gcr.io/k8s-prow/entrypoint:v20190523-832050b39"
-      sidecar: "gcr.io/k8s-prow/sidecar:v20190523-832050b39"
+      clonerefs: "gcr.io/k8s-prow/clonerefs:v20190523-832050b39"   # Clone images into the host
+      initupload: "gcr.io/k8s-prow/initupload:v20190523-832050b39" # Uploads artifacts to GCS
+      entrypoint: "gcr.io/k8s-prow/entrypoint:v20190523-832050b39" # Talks with Prow
+      sidecar: "gcr.io/k8s-prow/sidecar:v20190523-832050b39"       # Adds artifacts to Upload Queue
     gcs_configuration:
       bucket: "comm-prow-storage"
       path_strategy: "explicit"
