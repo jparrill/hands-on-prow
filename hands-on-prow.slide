@@ -306,19 +306,18 @@ Also on the config file we used to have the *Notifiers* and the *Jobs*, we will 
 Now we need to verify that the ConfigFile and PluginFile is well formed with a *Bazel* task and then load it as ConfigMap on the `default` namespace.
 
 - Go to the `test-infra` repo location and execute this command:
-  bazel run //prow/cmd/checkconfig -- --plugin-config=$HOME/prow_conf/plugins.yaml --config-path=$HOME/prow_conf/config.yaml
+  bazel run //prow/cmd/checkconfig -- \
+    --plugin-config=$HOME/prow_conf/plugins.yaml \
+    --config-path=$HOME/prow_conf/config.yaml
 
 - Then load them into K8s `default` namespace (full path needed):
-  kubectl create configmap plugins \
-    --from-file=$HOME/prow_conf/plugins.yaml --dry-run -o yaml \
-    | kubectl replace configmap plugins -f -
+  kubectl create configmap plugins --from-file=$HOME/prow_conf/plugins.yaml --dry-run -o yaml \
+    | kubectl replace configmap plugins -f -  # If the CM already exists
 
-  kubectl create configmap config \
-    --from-file=config.yaml=config.yaml --dry-run -o yaml \
-    | kubectl create configmap config -f -
+  kubectl create configmap config --from-file=config.yaml=config.yaml --dry-run -o yaml \
+    | kubectl create configmap config -f -    # If the CM doesn't exists
 
-  kubectl create configmap label-config \
-    --from-file=$HOME/prow_conf/labels.yaml -o yaml
+  kubectl create configmap label-config --from-file=$HOME/prow_conf/labels.yaml -o yaml
 
 .background img/background.png
 
@@ -387,5 +386,45 @@ Also interacts with *Plank* in order to trigger Jobs
 
 
 * Auto-management of your GitHub repo
-In order to make tide work, we need to go through our [[https://github.com/the-shadowmen/nostromo/blob/master/config.yaml][Config file]]
+In order to manage out repo automatically, we need to go through our [[https://github.com/the-shadowmen/nostromo/blob/master/config.yaml][Config file]]. You need to ensure that you've filled these sections properly
+
+- Plank: to have the utility images ready and GCS bucket linked to upload artifacts
+- Tide: To manages automerge and testing jobs
+- Deck: To describe the resultant artifacts to be uploaded to GCS
+
+You also need to have the Github Webhook pointing properly to your Hook service on K8s on your Github Org
+
+.image img/webhook_github.png
+.background img/background.png
+
+
+* Auto-management of your GitHub repo
+
+There is not a great way to bake the config, because the documentation is not good and you need to go through the code to know all the config statements, but you at least you have a clear workflow to follow.
+
+- Prepare your new config
+- Check it with the *Bazel* job `checkconfig` (as we saw before)
+  bazel run //prow/cmd/checkconfig -- \
+    --plugin-config=$HOME/prow_conf/plugins.yaml \
+    --config-path=$HOME/prow_conf/config.yaml
+
+.image img/safety_first.png _ 250
+
+.background img/background.png
+
+
+* Auto-management of your GitHub repo
+- Upload the ConfigMap
+
+  kubectl create configmap plugins --from-file=plugins.yaml=$HOME/prow_conf/plugins.yaml \
+    --dry-run -o yaml | kubectl replace configmap plugins -f -
+
+  kubectl create configmap config --from-file=config.yaml=$HOME/prow_conf/config.yaml \
+    --dry-run -o yaml | kubectl replace configmap config -f -
+
+  kubectl create configmap label-config --from-file=labels.yaml=$HOME/prow_conf/labels.yaml \
+    --dry-run -o yaml | kubectl replace configmap label-config -f -
+
+This will allow you to start with Prow Jobs easily.
+.image img/ci_cd.png _ 450
 .background img/background.png
