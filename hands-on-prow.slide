@@ -30,6 +30,7 @@ https://github.com/jparrill/hands-on-prow
 - Auto-management of your GitHub repo
 - Testing with Prow
 - Notification management
+- References
 
 .background img/background.png
 .caption [[https://github.com/jparrill/hands-on-prow][Hands on Prow]] by Juan Manuel Parrilla
