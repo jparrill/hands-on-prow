@@ -15,6 +15,7 @@ plugins:
   - approve       
   - lgtm          
   - owners-label 
+  - config-updater
 
   the-shadowmen/kubevirt.github.io:
   - approve       # Implements a pull request approval process that manages the 'approved' label 

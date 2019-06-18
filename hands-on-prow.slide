@@ -428,3 +428,237 @@ There is not a great way to bake the config, because the documentation is not go
 This will allow you to start with Prow Jobs easily.
 .image img/ci_cd.png _ 450
 .background img/background.png
+
+
+* Questions? 
+.background img/background.png
+
+
+* Testing with Prow 
+.image img/test_section.jpg _ 750
+.background img/background.png
+
+
+* Testing with Prow 
+If you'd been set the config as we followed, I've good news for you!
+.image img/long_way.jpg
+
+You should be able to execute testing right now! *\o/*
+.background img/background.png
+
+
+* Testing with Prow 
+
+The Prow jobs works in the same way as you spin up an application in K8s, just select a *Base Image* to work with, the *EntryPoint*, *Volumes*, *Env* *variables*, *NodeSelector* (in order to use concrete nodes in a kind of test).
+
+Let's see what kind of Jobs we have and how to configure them.
+
+*Periodic:*
+
+- The component that will take care about trigger this jobs is *Horologium*
+- These are context free jobs.
+- Will be executed in a pace that you decide.
+- You cannot set a Repository to work with (as we do with others)
+
+.background img/background.png
+
+
+* Testing with Prow 
+This is how looks like the *Periodic* Job spec:
+.code -edit samples/sample_config.yaml /^periodics/,/args:/
+The *Special* Decoration config are set on ConfigFile's Plank section 
+.background img/background.png
+
+
+* Testing with Prow 
+
+*Presubmit:*
+
+- The components that will take care about trigger this jobs are *Hook*, *Plugins* `or|and` *Tide*.
+- This jobs are triggered *when* *a* *PR* *is* *Created* and will execute the tests directly on the proper branch *BEFORE* the merge happens.
+- These jobs have context, then you need to put the repostitory to watch.
+- Github will trigger a notification when the webhook criteria match, against the *Hook* service.
+- From that *Plugins* comes in action and do their thing, after that sometimes the workflow ends here.
+- Other times *Tide* will continue it managing the situation in case of `/test` or PR merge
+
+.background img/background.png
+
+
+* Testing with Prow
+This is how looks like the *Presubmit* Job spec:
+.code -edit samples/sample_config.yaml /^presubmits/,/args:/
+.background img/background.png
+
+
+* Testing with Prow 
+
+*Postsubmit:*
+
+- The components that will take care about trigger this jobs are *Hook*, *Plugins* and *Tide*.
+- These jobs are triggered *when* *a* *PR* *is* *Merged* and will execute the tests directly on the proper branch *AFTER* the merge happens.
+- These jobs have context, then you need to put the repostitory to watch.
+- Github will trigger a notification when the webhook criteria match, against the *Hook* service.
+- From that *Plugins* comes in action and do their thing, after that will notify *Tide*.
+- Other times *Tide* will finish it executing the proper tests.
+
+.background img/background.png
+
+
+* Testing with Prow
+This is how looks like the *Postsubmit* Job spec:
+.code -edit samples/sample_config.yaml /^postsubmits/,/args:/
+.background img/background.png
+
+
+* Testing with Prow (Bonus)
+As you see, the config and the Jobs are mixed in the same ConfigMap/File, this is weird isn't it?
+Well this is what you need:
+.image img/config_updater.png _ 400
+.background img/background.png
+
+
+* Testing with Prow (Bonus)
+Config updater redeploys configuration and plugin configuration files when they change and allows you to keep separated your Jobs from your config.
+
+- You need to patch all the deployments with this flag: `--job-config-path=/etc/job-config`
+- Create the proper config maps in the same way we do with config file.
+- Add the proper mount point:
+    - name: job-config
+      mountPath: /etc/job-config
+      readOnly: true
+.background img/background.png
+
+
+* Testing with Prow (Bonus)
+- We need to add the `config-updater` section on `plugins.yaml` ConfigMap something like:
+  config_updater:
+    maps:
+      github/ci/prow/files/config.yaml:
+        name: config
+        namespace: kubevirt-prow
+      github/ci/prow/files/jobs/**/*.yaml: # This allows you to have separated folders
+        name: job-config
+        namespace: kubevirt-prow
+      github/ci/prow/files/plugins.yaml:
+        name: plugins
+        namespace: kubevirt-prow
+      github/ci/prow/files/labels.yaml:
+        name: label-config
+        namespace: kubevirt-prow
+.background img/background.png
+
+
+* Testing with Prow (Bonus)
+.image img/jobs_tree.png _ 600
+Also you need to attach the config to the concrete repo:
+.code samples/sample_plugins.yaml /the-shadowmen\/nostromo:/,/config-updater/
+.background img/background.png
+
+
+* Questions? 
+.background img/background.png
+
+
+* Prow Notifications
+.image img/notif_logo.png _ 350
+.background img/background.png
+
+
+* Prow Notifications
+For *Presubmits* and *Postsubmits* jobs are not necessary to have these because GitHub manage the notifications, but what happens when a *Periodic* job fails? who will let me know about?, well *Crier* is here to save the day :).
+
+This is not a mandatory service to work, but recommendable, as we said before:
+
+- [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/crier][*Crier*]] manages the notifications against different providers like slack, github, etc..
+- Reports your prowjobs on their status changes.
+- Communication with providers through API tokens inside of k8s secrets
+
+Those are the supported providers:
+
+- Gerrit
+- Pubsub
+- Github
+- Slack
+.background img/background.png
+
+
+* Prow Notifications
+To Configure Crier you could [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/crier][follow this guide]] or [[https://github.com/the-shadowmen/nostromo/blob/master/docs/how-to-prow.md#managing-notifications][this one]], but let's summarize:
+
+- With [[https://github.com/kubernetes/test-infra.git][test-infra]] repo, apply the RBAC manifest from `test-infra/prow/cluster/crier_rbac.yaml`
+- Patch *Crier* manifest with `--slack-workers=n` and `--slack-token-file=/etc/slack-api-token` it is on `test-infra/prow/cluster/crier_deployment.yaml`
+- Deploy *Crier* on your control plane 
+- Get a Slack API Token and put it inside of a secret.
+  kubectl create secret generic slack-api-token \ 
+    --from-file=slack-api-token=$HOME/private/SLACK-API-TOKEN
+- Mount the Slack API Token Secret on the Jobs directly, at `/etc/slack-api-token` path
+
+.background img/background.png
+
+* Prow Notifications
+- Modify the Prow's ConfigMap adding a `slack_reporter` section including the desired configuration:
+.code samples/sample_config.yaml /^slack_reporter/,/report_template/
+.background img/background.png
+
+
+* Questions? 
+.background img/background.png
+
+
+* References
+.image img/references_logo.png _ 700
+.background img/background.png
+
+
+* References
+
+*Introduction:*
+
+- [[https://github.com/kubernetes/test-infra/blob/master/prow/README.md][Readme file]]
+- [[https://prow.k8s.io/command-help][Command Help]] 
+- [[https://godoc.org/k8s.io/test-infra/prow][Prow Go Doc]] 
+- [[https://kurtmadel.com/posts/native-kubernetes-continuous-delivery/prow/][Mandatory Article to read]] 
+- [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md][Prow Quickstart]] 
+- [[https://github.com/kubernetes/test-infra/blob/master/prow/cmd/README.md#core-components][Prow Images]] 
+- [[https://raw.githubusercontent.com/kubernetes/test-infra/master/prow/docs/pr-interactions-sequence.svg?sanitize=true][Prow PR Workflow]]
+- [[https://github.com/kubernetes/test-infra/blob/master/prow/cmd/tide/maintainers.md#best-practices][Prow Best Practices]] 
+.background img/background.png
+
+
+* References
+
+*Prow* *Plugins:*
+
+- [[https://prow.k8s.io/plugins][Prow Plugins]] 
+- [[https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md#the-code-review-process][Prow Code-Review process]] 
+
+*Prow* *Jobs:*
+
+- [[https://kurtmadel.com/posts/native-kubernetes-continuous-delivery/prow/#prow-is-a-ci-cd-job-executor][Prow Jobs overview]] 
+- [[https://github.com/kubernetes/test-infra/blob/master/prow/life_of_a_prow_job.md][Life of a Prow Job]] 
+- [[https://github.com/kubernetes/test-infra/tree/c8829eef589a044126289cb5b4dc8e85db3ea22f/prow/cmd/phony/examples][Webhook Payload sample]] 
+- [[https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md][Deep dive Jobs]]
+- [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/phaino][Phaino]]
+- [[https://github.com/kubernetes/test-infra/blob/master/prow/cmd/tide/config.md][Tide Config]]
+.background img/background.png
+
+
+
+* References
+
+*Prow* *SSL:*
+
+- [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md#configure-ssl][Configure SSL]] 
+- [[https://github.com/jetstack/cert-manager][Cert Manager]]
+- [[https://github.com/jetstack/cert-manager/blob/master/docs/tutorials/acme/quick-start/index.rst][Cert Manager Tutorial]]
+
+*Others:*
+
+- [[https://kurtmadel.com/posts/native-kubernetes-continuous-delivery/native-k8s-cd/][Another useful Article]] 
+- [[https://github.com/kubevirt/project-infra][Kubevirt Project-Infra]] A great example of how to manage Prow config and some config files to use it as reference
+.background img/background.png
+
+
+* The end
+.image img/the_end.jpg _ 650
+.background img/background.png

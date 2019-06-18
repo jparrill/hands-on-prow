@@ -56,13 +56,11 @@ deck:
       "artifacts/junit.*\\.xml": ["junit-viewer"]
 
 slack_reporter:
-  # Default: None
   job_types_to_report:
   - presubmit
   - postsubmit
   - periodic
   - batch
-  # Default: None
   job_states_to_report:
   - triggered
   - pending
@@ -77,10 +75,12 @@ slack_reporter:
 periodics:
   - interval: 24h
     name: kubevirt-io-periodic-link-checker
-    decorate: true
+    decorate: true      # The pod will be decorated with our special config
+    always_run: true    # Tests always run
+    skip_report: false  # Avoid to report the Job status
     spec:
       nodeSelector:
-+       region: primary
+        region: primary
       containers:
         - image: docker.io/library/ruby
           env:
@@ -92,10 +92,12 @@ periodics:
 postsubmits:
   the-shadowmen/kubevirt.github.io:
     - name: kubevirt-io-postsubmit-link-checker
-      decorate: true
+      decorate: true      # The pod will be decorated with our special config
+      always_run: true    # Tests always run
+      skip_report: false  # Avoid to report the Job status
       spec:
         nodeSelector:
-+         region: primary
+          region: primary
         containers:
           - image: docker.io/library/ruby
             env:
@@ -107,12 +109,12 @@ postsubmits:
 presubmits:
   the-shadowmen/kubevirt.github.io:
     - name: kubevirt-io-presubmit-link-checker
-      decorate: true
-      always_run: true
-      skip_report: false
+      decorate: true      # The pod will be decorated with our special config
+      always_run: true    # Tests always run
+      skip_report: false  # Avoid to report the Job status
       spec:
         nodeSelector:
-+         region: primary
+          region: primary
         containers:
           - image: docker.io/library/ruby
             env:
