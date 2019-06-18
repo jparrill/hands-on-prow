@@ -450,7 +450,7 @@ You should be able to execute testing right now! *\o/*
 
 * Testing with Prow 
 
-The Prow jobs works in the same way as you spin up an application in K8s, just select a *Base Image* to work with, the *EntryPoint*, *Volumes*, *Env* *variables*, *NodeSelector* (in order to use concrete nodes in a kind of test).
+The Prow jobs works in the same way as you spin up an application in K8s, just select a *Base* *Image* to work with, the *EntryPoint*, *Volumes*, *Env* *variables*, *NodeSelector* (in order to use concrete nodes in a kind of test).
 
 Let's see what kind of Jobs we have and how to configure them.
 
