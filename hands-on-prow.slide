@@ -215,17 +215,33 @@ We will just start assuming that you already have a standalone k8s working, the 
 
 
 * Deploying Prow 
+We have 2 ways to deploy Prow:
+
+- Using Tackle
+- Manually
+
+We recommend to use Tackle because in some minutes you will have it Prow working, you will need to follow [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md#tackle-deployment][this procedure]] and some requirements:
+
+- [[https://docs.bazel.build/versions/master/install-redhat.html][Bazel]] + [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md#tackle-deployment][Tackel]] + [[https://kubernetes.io/docs/tasks/tools/install-kubectl/][kubectl client]] + [[https://cloud.google.com/sdk/docs/downloads-yum][gcloud client]]
+- Access to GCE account (Tackle will create a GKE cluster)
+- GitHub Oauth token: To allow bot user to execute actions in your repo/org
+
+This is a [[https://pastebin.com/raw/2kG0ZKJG][Sample Installation]]
+.background img/background.png
+
+* Deploying Prow 
+
+Or [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md#manual-deployment][Manual way]]:
 
 With our new fresh K8s cluster we will start working to deploy Prow:
 
-- [[https://github.com/jparrill/community/blob/feature/ci_cd_doc/docs/CI-CD/how-to-prow.md#deploying-on][Deploying Prow]] (you could avoid the terraform part)
+- [[https://github.com/jparrill/community/blob/feature/ci_cd_doc/docs/CI-CD/how-to-prow.md#deploying-on][Sample Prow Manual Installation]] (you could avoid the terraform part)
 
 We will summarize all the nesessary steps to make it work (all explained in depth on the previous link):
 
 - Get into your k8s instance and Install Golang, Bazel, Tackel and some dev requirements
 - Create the proper RBAC and secrets that Prow needs
 - Clone [[https://github.com/kubernetes/test-infra.git][test-infra]] repository, create `test-pods` NS and apply the `prow/cluster/starter.yaml` manifest
-- Now you to have Prow working
 
 .background img/background.png
 
