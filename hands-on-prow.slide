@@ -220,13 +220,13 @@ We have 2 ways to deploy Prow:
 - Using Tackle
 - Manually
 
-We recommend to use Tackle because in some minutes you will have it Prow working, you will need to follow [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md#tackle-deployment][this procedure]] and some requirements:
+We recommend to use *Tackle* because in some minutes you will have it Prow working, you will need to follow [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md#tackle-deployment][this procedure]] and some requirements:
 
 - [[https://docs.bazel.build/versions/master/install-redhat.html][Bazel]] + [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md#tackle-deployment][Tackel]] + [[https://kubernetes.io/docs/tasks/tools/install-kubectl/][kubectl client]] + [[https://cloud.google.com/sdk/docs/downloads-yum][gcloud client]]
 - Access to GCE account (Tackle will create a GKE cluster)
 - GitHub Oauth token: To allow bot user to execute actions in your repo/org
 
-This is a [[https://pastebin.com/raw/2kG0ZKJG][Sample Installation]]
+This is a [[https://pastebin.com/raw/2kG0ZKJG][Sample Installation]] but without SSL (T_T)
 .background img/background.png
 
 * Deploying Prow 
@@ -250,13 +250,28 @@ We will summarize all the nesessary steps to make it work (all explained in dept
 
 Depending on How did you configure your K8s instances you will access to your Prow instances in a way or other:
 
-- If you are working *without* GKE and you have _all-in-one_ k8s instance, you could access via NodePorts (we will go this way)
+- If you are working *without* GKE and you have _all-in-one_ k8s instance, you could access via NodePorts
 .code samples/control_plane_services
 - Otherwise you could access via Ingress through the LoadBalancer that GKE provides you.
-- Our main point to work with the UI will be the `deck` service
 
 .background img/background.png
 
+* Configuring Prow - SSL
+
+To deploy SSL in our cluster we will need some additional requirements
+
+- Google Domain ".dev" (in my case external to GCE account)
+- [[https://github.com/the-shadowmen/prow-devconf/blob/master/manifests/ssl/cert-manager.md][Some instructions to Deploy Cert-Manager]]
+- Permissions to create LB's on GCE account
+
+*NOTE*: depending on your decission you could go with Let's Encrypt or SelfSigned cert but if you're using a ".dev" domain you should use a real CA to validate your domain.
+
+- After deploy the Cert-Manager you need to create the [[https://github.com/the-shadowmen/prow-devconf/blob/master/manifests/ssl/lets-encrypt/le-clusterissuer.yaml][Issuer/ClusterIssuer]]
+- Then the [[https://github.com/the-shadowmen/prow-devconf/blob/master/manifests/ssl/lets-encrypt/le-certificate.yaml][Certificate]]
+- And at last the [[https://github.com/the-shadowmen/prow-devconf/blob/master/manifests/ssl/lets-encrypt/le-ingress-ssl.yaml][SSL Ingress]]
+
+Check this [[https://github.com/the-shadowmen/prow-devconf/blob/master/manifests/ssl/lets-encrypt/README.md][detailed instructions!!]]
+.background img/background.png
 
 * Configuring Prow 
 
