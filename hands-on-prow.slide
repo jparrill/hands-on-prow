@@ -151,7 +151,7 @@ Both are very simple but useful components
 - [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/horologium][*Horologium*]] triggers periodic jobs when necessary.
 - [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/sinker][*Sinker*]] cleans up old jobs and pods. (works as a GC)
 - Horologium does not have config at all but here is a Sinker piece of config:
-.code samples/sample_config.yaml /^sinker:/,/max_pod_age:/
+.code samples/sample_config.yaml /^sinker:/,/terminated_pod_ttl:/
 
 .background img/background.png
 
@@ -168,7 +168,8 @@ Both are very simple but useful components
 
 
 * Prow Control Plane: Tide
-.code samples/sample_config.yaml /^tide:/,/skip-unknown/
+.code samples/sample_config.yaml /^tide:/,/hold/
+.code samples/sample_config.yaml /pr_status_base_urls:/,/skip/
 .background img/background.png
 
 
@@ -280,9 +281,10 @@ Check this [[https://github.com/the-shadowmen/prow-devconf/blob/master/manifests
 
 You will need to spend some time preparing your config files, here you have our ones that maybe could be useful.
 
-- Prepare the [[https://github.com/the-shadowmen/nostromo/blob/master/config.yaml][Config file]] for Prow
-- Prepare the [[https://github.com/the-shadowmen/nostromo/blob/master/plugins.yaml][Plugins file]] for Prow
-- Prepare the [[https://github.com/the-shadowmen/nostromo/blob/master/labels.yaml][Labels file]] for Prow
+- Prepare the [[https://github.com/the-shadowmen/prow-devconf/blob/master/prow-config/config.yaml][Config file]] for Prow
+- Prepare the [[https://github.com/the-shadowmen/prow-devconf/blob/master/prow-config/plugins.yaml][Plugins file]] for Prow
+- Prepare the [[https://github.com/the-shadowmen/prow-devconf/blob/master/prow-config/labels.yaml][Labels file]] for Prow
+- Create folder tree and their [[https://github.com/the-shadowmen/prow-devconf/blob/master/prow-config/jobs][Jobs]] for Prow
 .background img/background.png
 
 
@@ -293,7 +295,7 @@ Let's go into the different sections of the ConfigFile. We will not review all t
 .code samples/sample_config.yaml /^prowjob_namespace/,/^log_level/
 
 - Sinker:
-.code samples/sample_config.yaml /^sinker/,/max_pod_age/
+.code samples/sample_config.yaml /^sinker/,/terminated_pod_ttl/
 
 .background img/background.png
 
@@ -317,7 +319,8 @@ Let's go into the different sections of the ConfigFile. We will not review all t
 
 
 * Configuring Prow 
-.code samples/sample_config.yaml /^tide:/,/skip-unknown-contexts/
+.code samples/sample_config.yaml /^tide:/,/hold/
+.code samples/sample_config.yaml /pr_status_base_urls:/,/skip/
 .background img/background.png
 
 
@@ -345,8 +348,9 @@ Now we need to verify that the ConfigFile and PluginFile is well formed with a *
 
 - Go to the `test-infra` repo location and execute this command:
   bazel run //prow/cmd/checkconfig -- \
-    --plugin-config=$HOME/prow_conf/plugins.yaml \
-    --config-path=$HOME/prow_conf/config.yaml
+    --plugin-config=$HOME/projects/prow-devconf/prow-config/plugins.yaml \
+    --config-path=$HOME/projects/prow-devconf/prow-config/config.yaml \
+    --job-config-path=$HOME/projects/prow-devconf/prow-config/jobs
 
 - Then load them into K8s `default` namespace (full path needed):
   kubectl create configmap plugins --from-file=$HOME/prow_conf/plugins.yaml --dry-run -o yaml \
@@ -388,7 +392,7 @@ Well, Prow plugins a a bunch of resources that give you capabilities on Prow pla
 
 
 * Prow Plugins
-This is how looks like part of [[https://github.com/the-shadowmen/nostromo/blob/master/plugins.yaml][*PluginsConfig*]] file, this one shows the enabled plugins for our organization:
+This is how looks like part of [[https://github.com/the-shadowmen/prow-devconf/blob/master/prow-config/plugins.yaml][*PluginsConfig*]] file, this one shows the enabled plugins for our organization:
 .code samples/sample_plugins.yaml /^plugins/,/trigger/
 
 As you see those plugins are enabled for all the organization and you doesn't need to add them for every repo you have. Instead some other plugins need to be enabled by repository to make them work
@@ -413,6 +417,81 @@ As we said before:
 Also interacts with *Plank* in order to trigger Jobs
 .background img/background.png
 
+* Prow plugins: config-updater
+As you see, the config and the Jobs are mixed in the same ConfigMap/File, this is weird isn't it?
+Well this is what you need:
+.image img/config_updater.png _ 400
+.background img/background.png
+
+* Prow plugins: config-updater
+Config updater redeploys configuration and plugin configuration files when they change and allows you to keep separated your Jobs from your config.
+
+- Just add the configuration to your `plugins.yaml`:
+.code -edit samples/sample_plugins.yaml /^config_updater/,/label-config/
+*Note*: Ensure you've been validated that the config, plugins and jobs are correctly set on their files with checkconfig.
+.background img/background.png
+
+
+* Prow plugins: config-updater
+After that you will need to add the config-updater to the repo that contains the data:
+
+.code samples/sample_plugins.yaml /prow-devconf:/,/config-updater/
+
+This is the link between the repo and the config. Then the plugin will create the ConfigMaps:
+
+  NAME                     DATA   AGE
+  config                   1      2d2h
+  job-config               1      17h
+  label-config             1      20h
+  plugins                  1      2d2h
+
+.background img/background.png
+
+* Prow plugins: config-updater
+.image img/jobs_tree.png _ 700
+.background img/background.png
+
+
+* Prow plugins: Approvers/Owner-labels
+
+Owners will allow you to set reviewers and approvers by folder or setting up somefilters in your managed repositories.
+
+To make it work you only need to enable the plugin in the repo config and after that, create a `OWNERS` file in the desired folder, it will have this format:
+.code samples/sample_owners.yaml /reviewers:/,/tripledes/
+.background img/background.png
+
+* Prow plugins: Approvers/Owner-labels
+
+.code samples/sample_owners.yaml /filters:/,/website/
+This is a [[https://github.com/the-shadowmen/kubevirt.github.io/blob/master/OWNERS][real sample of filters]]
+.background img/background.png
+
+* Prow plugins: Approvers/Owner-labels
+
+This is a very good example about how to configure Prow Jobs among multiple work groups:
+
+- [[https://github.com/kubevirt/project-infra/tree/master/github/ci/prow/files/jobs][Kubevirt Exmaple]]
+
+The folders have their own `OWNERS` file and every job file have the kind of job followed by the repo name: *kubevirt-tutorial-presubmits.yaml* 
+and the `OWNERS` file is like:
+
+  reviewers:
+    - codificat
+    - iranzo
+    - ptrnull
+    - jparrill
+  approvers:
+    - jparrill
+    - codificat
+    - iranzo
+    - ptrnull
+.background img/background.png
+
+* Prow plugins: Others
+- Trigger: This will allow you to trigger tests on desired repositories
+- Lgtm: Using `/lgtm` act as review on a PR
+- Approve: Approves a PR using `/approve`
+.background img/background.png
 
 * Questions? 
 .background img/background.png
@@ -424,7 +503,7 @@ Also interacts with *Plank* in order to trigger Jobs
 
 
 * Auto-management of your GitHub repo
-In order to manage out repo automatically, we need to go through our [[https://github.com/the-shadowmen/nostromo/blob/master/config.yaml][Config file]]. You need to ensure that you've filled these sections properly
+In order to manage out repo automatically, we need to go through our [[https://github.com/the-shadowmen/prow-devconf/blob/master/prow-conf/config.yaml][Config file]]. You need to ensure that you've filled these sections properly
 
 - Plank: to have the utility images ready and GCS bucket linked to upload artifacts
 - Tide: To manages automerge and testing jobs
@@ -443,8 +522,9 @@ There is not a great way to bake the config, because the documentation is not go
 - Prepare your new config
 - Check it with the *Bazel* job `checkconfig` (as we saw before)
   bazel run //prow/cmd/checkconfig -- \
-    --plugin-config=$HOME/prow_conf/plugins.yaml \
-    --config-path=$HOME/prow_conf/config.yaml
+    --plugin-config=$HOME/projects/prow-devconf/prow-config/plugins.yaml \
+    --config-path=$HOME/projects/prow-devconf/prow-config/config.yaml \
+    --job-config-path=$HOME/projects/prow-devconf/prow-config/jobs
 
 .image img/safety_first.png _ 250
 
@@ -503,7 +583,7 @@ Let's see what kind of Jobs we have and how to configure them.
 
 * Testing with Prow 
 This is how looks like the *Periodic* Job spec:
-.code -edit samples/sample_config.yaml /^periodics/,/args:/
+.code -edit samples/sample_jobs.yaml /^periodics/,/args:/
 The *Special* Decoration config are set on ConfigFile's Plank section 
 .background img/background.png
 
@@ -524,7 +604,7 @@ The *Special* Decoration config are set on ConfigFile's Plank section
 
 * Testing with Prow
 This is how looks like the *Presubmit* Job spec:
-.code -edit samples/sample_config.yaml /^presubmits/,/args:/
+.code -edit samples/sample_jobs.yaml /^presubmits/,/args:/
 .background img/background.png
 
 
@@ -544,53 +624,9 @@ This is how looks like the *Presubmit* Job spec:
 
 * Testing with Prow
 This is how looks like the *Postsubmit* Job spec:
-.code -edit samples/sample_config.yaml /^postsubmits/,/args:/
+.code -edit samples/sample_jobs.yaml /^postsubmits/,/args:/
 .background img/background.png
 
-
-* Testing with Prow (Bonus)
-As you see, the config and the Jobs are mixed in the same ConfigMap/File, this is weird isn't it?
-Well this is what you need:
-.image img/config_updater.png _ 400
-.background img/background.png
-
-
-* Testing with Prow (Bonus)
-Config updater redeploys configuration and plugin configuration files when they change and allows you to keep separated your Jobs from your config.
-
-- You need to patch all the deployments with this flag: `--job-config-path=/etc/job-config`
-- Create the proper config maps in the same way we do with config file.
-- Add the proper mount point:
-    - name: job-config
-      mountPath: /etc/job-config
-      readOnly: true
-.background img/background.png
-
-
-* Testing with Prow (Bonus)
-- We need to add the `config-updater` section on `plugins.yaml` ConfigMap something like:
-  config_updater:
-    maps:
-      github/ci/prow/files/config.yaml:
-        name: config
-        namespace: kubevirt-prow
-      github/ci/prow/files/jobs/**/*.yaml: # This allows you to have separated folders
-        name: job-config
-        namespace: kubevirt-prow
-      github/ci/prow/files/plugins.yaml:
-        name: plugins
-        namespace: kubevirt-prow
-      github/ci/prow/files/labels.yaml:
-        name: label-config
-        namespace: kubevirt-prow
-.background img/background.png
-
-
-* Testing with Prow (Bonus)
-.image img/jobs_tree.png _ 600
-Also you need to attach the config to the concrete repo:
-.code samples/sample_plugins.yaml /the-shadowmen\/nostromo:/,/config-updater/
-.background img/background.png
 
 
 * Questions? 
