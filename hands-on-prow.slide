@@ -447,6 +447,31 @@ This is the link between the repo and the config. Then the plugin will create th
 
 .background img/background.png
 
+
+* Prow plugins: config-updater
+In order to let prow know that you are using a separated ConfigMap to the deployments, you need to patch the `deck`, `hook`, `horologium`, `plank`, `sinker`, `tide` and `statusreconciler`, [[https://github.com/kubernetes/test-infra/search?l=YAML&q=--job-config-path%3D%2Fetc%2Fjob-config][with this changes]]:
+
+- on container args section:
+    
+    - --job-config-path=/etc/job-config
+
+- on volumeMounts section:
+
+    - mountPath: /etc/job-config
+      name: job-config
+      readOnly: true
+
+- on Volume section:
+    
+   - configMap:
+       defaultMode: 420
+       name: job-config
+     name: job-config
+
+
+
+.background img/background.png
+
 * Prow plugins: config-updater
 .image img/jobs_tree.png _ 700
 .background img/background.png
