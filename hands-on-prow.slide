@@ -516,7 +516,6 @@ In order to manage out repo automatically, we need to go through our [[https://g
 
 You also need to have the Github Webhook pointing properly to your Hook service on K8s on your Github Org
 
-.image img/webhook_github.png
 .background img/background.png
 
 
@@ -727,6 +726,8 @@ To Configure Crier you could [[https://github.com/kubernetes/test-infra/tree/mas
 
 *Prow* *SSL:*
 
+- [[https://github.com/the-shadowmen/prow-devconf/tree/master/manifests/ssl/README.md][Cert-Manager Installation for this talk]]
+- [[https://github.com/the-shadowmen/prow-devconf/blob/master/manifests/ssl/lets-encrypt/README.md][Prow-SSL Installation for this talk]]
 - [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md#configure-ssl][Configure SSL]] 
 - [[https://github.com/jetstack/cert-manager][Cert Manager]]
 - [[https://github.com/jetstack/cert-manager/blob/master/docs/tutorials/acme/quick-start/index.rst][Cert Manager Tutorial]]
