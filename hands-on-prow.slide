@@ -516,6 +516,7 @@ In order to manage out repo automatically, we need to go through our [[https://g
 
 You also need to have the Github Webhook pointing properly to your Hook service on K8s on your Github Org
 
+.image img/webhook_github.png 
 .background img/background.png
 
 
