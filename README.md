@@ -13,6 +13,6 @@ cd hands-on-prow
 present
 ```
 
-This is the repository to configure the Prow cluster that I've used on the presentation:
+This is the repository to configure the Prow cluster that I've used for this presentation:
 
-- [prow-devconf](https://github.com/the-shadowmen/prow-devconf)
+- [Prow Configuration repository](https://github.com/the-shadowmen/prow-devconf)
