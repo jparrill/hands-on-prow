@@ -12,3 +12,7 @@ go install golang.org/x/tools/cmd/present
 cd hands-on-prow
 present
 ```
+
+This is the repository to configure the Prow cluster that I've used on the presentation:
+
+- [prow-devconf](https://github.com/the-shadowmen/prow-devconf)
