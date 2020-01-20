@@ -452,6 +452,11 @@ This is the link between the repo and the config. Then the plugin will create th
 .background img/background.png
 
 
+* Prow plugins: config-updater
+- [[https://github.com/the-shadowmen/prow-devconf/pull/3][PR Sample]]
+.image img/PR_merged.png
+.background img/background.png
+
 * Prow plugins: Approvers/Owner-labels
 
 Owners will allow you to set reviewers and approvers by folder or setting up somefilters in your managed repositories.
