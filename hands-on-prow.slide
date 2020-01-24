@@ -103,14 +103,6 @@ https://github.com/jparrill/hands-on-prow
 
 .background img/background.png
 
-
-* Prow Control Plane: Plank  
-- This is how looks like the Plank's config section:
-.code -edit samples/sample_config.yaml /^plank:/,/gcs_credentials_secret/ 
-
-.background img/background.png
-
-
 * Prow Control Plane: Deck 
 
 - [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/deck][*Deck*]] is the Prow's WebUI and presents a nice view of recent jobs, among other things
@@ -136,23 +128,13 @@ https://github.com/jparrill/hands-on-prow
 .background img/background.png
 
 
-* Prow Control Plane: Deck 
-
-- This is how looks like the Deck's config section:
-.code -edit samples/sample_config.yaml /^deck:/,/junit/ 
-
-.background img/background.png
-
-
 * Prow Control Plane: Horologium and Synker
  
 Both are very simple but useful components
 
 - [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/horologium][*Horologium*]] triggers periodic jobs when necessary.
 - [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/sinker][*Sinker*]] cleans up old jobs and pods. (works as a GC)
-- Horologium does not have config at all but here is a Sinker piece of config:
-.code samples/sample_config.yaml /^sinker:/,/terminated_pod_ttl:/
-
+- Horologium does not have config
 .background img/background.png
 
 
@@ -164,12 +146,6 @@ Both are very simple but useful components
 - Serves live data to populate Tide Dashboard, PR Dashboard and also Tide History page
 - Provides these merge modes: `merge`, `squash` and `rebase`
 
-.background img/background.png
-
-
-* Prow Control Plane: Tide
-.code samples/sample_config.yaml /^tide:/,/hold/
-.code samples/sample_config.yaml /pr_status_base_urls:/,/skip/
 .background img/background.png
 
 
@@ -187,13 +163,6 @@ Those are the supported providers:
 
 .background img/background.png
 
-
-* Prow Control Plane: Crier
-- This is how looks like the Crier's config:
-.code samples/sample_config.yaml /^slack_reporter:/,/report_template:/
-.background img/background.png
-
-
 * Questions? 
 .background img/background.png
 
@@ -204,22 +173,10 @@ Those are the supported providers:
 
 
 * Deploying Prow 
-- We will start viewing this file [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md][Getting Started with Prow]]
-
-The problem with this guide is, that assumes that you're used to work with GCE/GKE and have some things configured.
-
-We will just start assuming that you already have a standalone k8s working, the basic one. You could follow this guide to do it:
-
-- [[https://kubernetes.io/docs/setup/production-environment/turnkey/gce/][Deploy K8s on GCE]]
-.image img/k8s_logo.png
-.background img/background.png
-
-
-* Deploying Prow 
 We have 2 ways to deploy Prow:
 
-- Using Tackle
-- Manually
+- Using *Tackle*: This will deploy a K8s cluster on GKE previously to deploy Prow
+- *Manually*: You need to have at least a K8s working w/e you want to deploy, you could use [[https://kubernetes.io/docs/setup/production-environment/turnkey/gce/][this guide]]
 
 We recommend to use *Tackle* because in some minutes you will have it Prow working, you will need to follow [[https://github.com/kubernetes/test-infra/blob/master/prow/getting_started_deploy.md#tackle-deployment][this procedure]] and some requirements:
 
@@ -255,6 +212,13 @@ Depending on How did you configure your K8s instances you will access to your Pr
 .code samples/control_plane_services
 - Otherwise you could access via Ingress through the LoadBalancer that GKE provides you.
 
+.background img/background.png
+
+* Questions? 
+.background img/background.png
+
+* Configuring Prow 
+.image img/configure_prow.png
 .background img/background.png
 
 * Configuring Prow - SSL
@@ -500,7 +464,7 @@ This is a [[https://github.com/the-shadowmen/kubevirt.github.io/blob/master/OWNE
 
 This is a very good example about how to configure Prow Jobs among multiple work groups:
 
-- [[https://github.com/kubevirt/project-infra/tree/master/github/ci/prow/files/jobs][Kubevirt Exmaple]]
+- [[https://github.com/kubevirt/project-infra/tree/master/github/ci/prow/files/jobs][Kubevirt Example]]
 
 The folders have their own `OWNERS` file and every job file have the kind of job followed by the repo name: *kubevirt-tutorial-presubmits.yaml* 
 and the `OWNERS` file is like:
@@ -614,7 +578,6 @@ Let's see what kind of Jobs we have and how to configure them.
 * Testing with Prow 
 This is how looks like the *Periodic* Job spec:
 .code -edit samples/sample_jobs.yaml /^periodics/,/args:/
-The *Special* Decoration config are set on ConfigFile's Plank section 
 .background img/background.png
 
 

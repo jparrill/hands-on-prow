@@ -4,7 +4,11 @@ periodics:
     name: kubevirt-io-periodic-link-checker
     decorate: true      # The pod will be decorated with our special config
     always_run: true    # Tests always run
-    skip_report: false  # Avoid to report the Job status
+    extra_refs:
+    - org: the-shadowmen
+      repo: kubevirt.github.io
+      base_ref: master
+      path_alias: kubevirt.github.io skip_report: false  # Avoid to report the Job status
     spec:
       nodeSelector:
         region: primary
@@ -14,7 +18,7 @@ periodics:
             - name: NOKOGIRI_USE_SYSTEM_LIBRARIES
               value: "true"
           command: ["/bin/sh", "-c"]
-          args: ["git clone https://github.com/the-shadowmen/kubevirt.github.io.git && cd kubevirt.github.io && /usr/local/bin/bundle install && bundle exec rake"]
+          args: ["/usr/local/bin/bundle install && bundle exec rake"]
 
 postsubmits:
   the-shadowmen/kubevirt.github.io:
