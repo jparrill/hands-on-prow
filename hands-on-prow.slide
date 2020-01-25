@@ -134,7 +134,7 @@ Both are very simple but useful components
 
 - [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/horologium][*Horologium*]] triggers periodic jobs when necessary.
 - [[https://github.com/kubernetes/test-infra/tree/master/prow/cmd/sinker][*Sinker*]] cleans up old jobs and pods. (works as a GC)
-- Horologium does not have config
+- Horologium does not have explicit config
 .background img/background.png
 
 
